@@ -119,6 +119,8 @@ Data akan dihapus dari database dan tercatat di log sistem.
 Klik tombol Tutup Tree di dashboard untuk menampilkan tampilan Pedigree Keluarga (Generasi) dalam format hierarki.
 Kotak biru muda untuk laki-laki dan krem untuk perempuan, tersusun berdasarkan generasi secara rapi.
 ---
+### Link Full Project :
+https://mikroskilacid-my.sharepoint.com/:f:/g/personal/221110546_students_mikroskil_ac_id/Eqg8d5Dp5GRIpW6sLG13_T4BRIOuAzpJjkfJcotuZuu-Qw?e=2SRX9N
 
 ## 📞 Fitur Tambahan — Contact (Kirim ke WhatsApp)
 Pengguna dapat mengirimkan pesan langsung ke pengembang aplikasi melalui form Contact.
