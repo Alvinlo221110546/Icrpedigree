@@ -1,445 +1,236 @@
+// src/Pages/AnimalDashboard.jsx
 import React, { useEffect, useState } from "react";
-import { getMembers, createMember, updateMember, deleteMember } from "../Utils/api.js";
-import Footer from "../Componen/Footer.jsx";
 import "bootstrap/dist/css/bootstrap.min.css";
-import userpict from "../assets/user-default.png";
+import { getAnimals, createAnimal, editAnimal, removeAnimal, createPedigreeScan } from "../Utils/api.js";
+import AnimalForm from "../Components/AnimalForm.jsx";
+import PedigreeTree from "../Components/PedigreeTree.jsx";
+import Footer from "../Components/Footer.jsx";
 import Swal from "sweetalert2";
 import withReactContent from "sweetalert2-react-content";
+import ScanPedigreeButton from "../Components/ScanPedigreeButton.jsx";
+
 
 const MySwal = withReactContent(Swal);
 
-export default function UserDashboard() {
-  const [members, setMembers] = useState([]);
-  const [formVisible, setFormVisible] = useState(false);
-  const [treeVisible, setTreeVisible] = useState(false);
-  const [editingId, setEditingId] = useState(null);
+export default function AnimalDashboard() {
+  const [animals, setAnimals] = useState([]);
+  const [editing, setEditing] = useState(null);
+  const [showForm, setShowForm] = useState(false);
+  const [showTree, setShowTree] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [notif, setNotif] = useState(null);
 
-  const [form, setForm] = useState({
-    nik: "",
-    name: "",
-    dob: "",
-    gender: "male",
-    father_id: null,
-    mother_id: null,
-    spouse_id: null,
-    notes: "",
-  });
+  const CLOUDINARY_UPLOAD_PRESET = "animal_upload";
+  const CLOUDINARY_CLOUD_NAME = "dgl701jmj";
 
-  const loadMembers = async () => {
+  const pushNotif = (msg, timeout = 2500) => {
+    setNotif(msg);
+    setTimeout(() => setNotif(null), timeout);
+  };
+
+  const load = async () => {
+    setLoading(true);
     try {
-      const data = await getMembers();
-      setMembers(data);
-    } catch (e) {
-      await MySwal.fire({
-        icon: "error",
-        title: "Error",
-        text: "Silakan login terlebih dahulu",
-      });
-      window.location = "/login";
+      const result = await getAnimals();
+
+      const list = Array.isArray(result)
+        ? result
+        : Array.isArray(result?.data)
+          ? result.data
+          : [];
+
+      setAnimals(list);
+    } catch (err) {
+      console.error(err);
+      pushNotif("Gagal memuat data! Periksa koneksi.");
+    } finally {
+      setLoading(false);
     }
   };
 
   useEffect(() => {
-    loadMembers();
+    load();
   }, []);
 
-  const onSubmit = async (e) => {
-    e.preventDefault();
-
-    if (!form.name.trim()) {
-      await MySwal.fire({
-        icon: "error",
-        title: "Oops...",
-        text: "Nama wajib diisi!",
-      });
+  const handleCreate = async (payload) => {
+    if (!payload.cat_name || !payload.unique_code) {
+      pushNotif("Silakan isi form dengan lengkap!");
       return;
     }
 
-    const payload = {
-      nik: form.nik,
-      name: form.name,
-      dob: form.dob,
-      gender: form.gender,
-      father_id: form.father_id ?? null,
-      mother_id: form.mother_id ?? null,
-      spouse_id: form.spouse_id ?? null,
-      notes: form.notes,
-    };
+    await createAnimal(payload);
+    await load();
+    setShowForm(false);
+    pushNotif("Hewan berhasil ditambahkan", 2000);
+  };
 
-    try {
-      if (editingId) {
-        await updateMember(editingId, payload);
-        await MySwal.fire({
-          icon: "success",
-          title: "Berhasil!",
-          text: "Anggota keluarga berhasil diperbarui!",
-        });
-      } else {
-        await createMember(payload);
-        await MySwal.fire({
-          icon: "success",
-          title: "Berhasil!",
-          text: "Anggota keluarga berhasil ditambahkan!",
-        });
-      }
-      resetForm();
-      await loadMembers();
-    } catch (err) {
-      await MySwal.fire({
-        icon: "error",
-        title: "Gagal",
-        text: err.message || "Gagal menyimpan anggota keluarga",
-      });
+  const handleUpdate = async (payload) => {
+    if (!editing) return;
+
+    if (!payload.cat_name) {
+      pushNotif("Nama hewan wajib diisi!");
+      return;
     }
+
+    await editAnimal(editing.id, payload);
+    await load();
+    setEditing(null);
+    setShowForm(false);
+    pushNotif("Data berhasil diperbarui");
   };
 
-  const resetForm = () => {
-    setForm({
-      nik: "",
-      name: "",
-      dob: "",
-      gender: "male",
-      father_id: null,
-      mother_id: null,
-      spouse_id: null,
-      notes: "",
-    });
-    setEditingId(null);
-    setFormVisible(false);
-  };
-
-  const onEdit = (member) => {
-    setForm({
-      nik: member.nik,
-      name: member.name,
-      dob: member.dob,
-      gender: member.gender,
-      father_id: member.father_id,
-      mother_id: member.mother_id,
-      spouse_id: member.spouse_id,
-      notes: member.notes,
-    });
-    setEditingId(member.id);
-    setFormVisible(true);
-  };
-
-  const onDelete = async (id) => {
-    const result = await MySwal.fire({
-      title: "Apakah Anda yakin?",
-      text: "Anggota ini akan dihapus permanen!",
+  const handleDelete = async (id) => {
+    const c = await MySwal.fire({
+      title: "Hapus hewan?",
       icon: "warning",
       showCancelButton: true,
-      confirmButtonColor: "#d33",
-      cancelButtonColor: "#3085d6",
-      confirmButtonText: "Ya, hapus!",
-      cancelButtonText: "Batal",
+      confirmButtonText: "Ya, hapus",
     });
 
-    if (!result.isConfirmed) return;
-
-    try {
-      await deleteMember(id);
-      await loadMembers();
-      await MySwal.fire({
-        icon: "success",
-        title: "Terhapus!",
-        text: "Anggota berhasil dihapus",
-      });
-    } catch (err) {
-      await MySwal.fire({
-        icon: "error",
-        title: "Gagal",
-        text: err.message || "Gagal menghapus anggota",
-      });
+    if (c.isConfirmed) {
+      await removeAnimal(id);
+      await load();
+      pushNotif("Data terhapus.");
     }
   };
 
- 
-  const buildTreeByGeneration = () => {
-    const map = {};
-    const roots = [];
-
-    members.forEach((m) => {
-      map[m.id] = { ...m, children: [], level: 0 };
-    });
-
-    members.forEach((m) => {
-      const node = map[m.id];
-      if (m.father_id && map[m.father_id]) {
-        map[m.father_id].children.push(node);
-        node.level = map[m.father_id].level + 1;
-      } else {
-        roots.push(node);
-      }
-    });
-
-    return roots;
-  };
-
-  const renderTreeByGeneration = (nodes) => {
-    if (!nodes || nodes.length === 0) return null;
-
-    const levels = {};
-
-    const traverse = (node) => {
-      if (!levels[node.level]) levels[node.level] = [];
-      levels[node.level].push(node);
-      node.children.forEach(traverse);
-    };
-
-    nodes.forEach(traverse);
-
-    return Object.keys(levels)
-      .sort((a, b) => a - b)
-      .map((lvl) => (
-        <div key={lvl} className="d-flex justify-content-center mb-3 gap-3">
-          {levels[lvl].map((node) => (
-            <div
-              key={node.id}
-              className={`p-2 border rounded text-center ${node.gender === "male"
-                ? "bg-primary bg-opacity-10"
-                : "bg-warning bg-opacity-10"
-                }`}
-              style={{ minWidth: "120px" }}
-            >
-              <strong>{node.name}</strong>
-              <br />
-              <span className="text-primary">
-                ({node.gender === "male" ? "Laki-laki" : "Perempuan"})
-              </span>
-              <br />
-              {node.dob && (
-                <span className="text-muted">
-                  {new Date(node.dob).toLocaleDateString()}
-                </span>
-              )}
-              <br />
-              {node.notes && (
-                <span className="fst-italic text-secondary">[{node.notes}]</span>
-              )}
-            </div>
-          ))}
-        </div>
-      ));
-  };
-
-
   const getNameById = (id) => {
-    if (!id) return "-";
-    const member = members.find((m) => m.id === id);
-    return member ? member.name : "-";
+    const a = animals.find((x) => x.id === id);
+    return a ? a.cat_name : "-";
   };
+
 
   return (
     <div className="d-flex flex-column min-vh-100 bg-light">
-      <main className="container my-4">
-        <h2 className="text-center mb-4 text-primary">Dashboard Keluarga Anda</h2>
+      {notif && (
+        <div className="alert alert-warning text-center m-0 py-2">
+          {notif}
+        </div>
+      )}
 
-        <div className="d-flex justify-content-center mb-3 gap-2">
-          <button
-            className="btn btn-primary"
-            onClick={() => setFormVisible(!formVisible)}
-          >
-            {formVisible ? "Tutup Form" : editingId ? "Edit Anggota" : "Tambah Anggota"}
-          </button>
-          <button
-            className="btn btn-success"
-            onClick={() => setTreeVisible(!treeVisible)}
-          >
-            {treeVisible ? "Tutup Tree" : "Lihat Pedigree"}
-          </button>
+      <main className="container py-4">
+        <div className="d-flex justify-content-between mb-3">
+          <h3 className="m-0 text-primary">Dashboard Pedigree Hewan</h3>
+
+          <div>
+            <button
+              className="btn btn-outline-secondary me-2"
+              onClick={() => {
+                setEditing(null);
+                setShowForm((s) => !s);
+              }}
+            >
+              {showForm ? "Tutup Form" : "Tambah Hewan"}
+            </button>
+
+            <button className="btn btn-outline-success" onClick={() => setShowTree((s) => !s)}>
+              {showTree ? "Tutup Pedigree" : "Lihat Pedigree"}
+            </button>
+          </div>
         </div>
 
-        {formVisible && (
-          <div className="card mb-4">
-            <div className="card-body">
-              <form onSubmit={onSubmit}>
-                <div className="row g-3">
-                  <div className="col-md-6">
-                    <input
-                      type="text"
-                      placeholder="NIK"
-                      className="form-control"
-                      value={form.nik}
-                      onChange={(e) => setForm({ ...form, nik: e.target.value })}
-                    />
-                  </div>
-                  <div className="col-md-6">
-                    <input
-                      type="text"
-                      placeholder="Nama Lengkap"
-                      className="form-control"
-                      value={form.name}
-                      required
-                      onChange={(e) => setForm({ ...form, name: e.target.value })}
-                    />
-                  </div>
-                  <div className="col-md-6">
-                    <input
-                      type="date"
-                      className="form-control"
-                      value={form.dob}
-                      onChange={(e) => setForm({ ...form, dob: e.target.value })}
-                    />
-                  </div>
-                  <div className="col-md-6">
-                    <select
-                      className="form-control"
-                      value={form.gender}
-                      onChange={(e) => setForm({ ...form, gender: e.target.value })}
-                    >
-                      <option value="male">Laki-laki</option>
-                      <option value="female">Perempuan</option>
-                    </select>
-                  </div>
+        {showForm && (
+          <AnimalForm
+            initial={editing}
+            onSubmit={editing ? handleUpdate : handleCreate}
+            onCancel={() => {
+              setEditing(null);
+              setShowForm(false);
+            }}
+          />
+        )}
 
-                  <div className="col-md-4">
-                    <select
-                      className="form-control"
-                      value={form.father_id ?? ""}
-                      onChange={(e) =>
-                        setForm({
-                          ...form,
-                          father_id: e.target.value ? Number(e.target.value) : null,
-                        })
-                      }
-                    >
-                      <option value="">Pilih Ayah</option>
-                      {members.map((m) => (
-                        <option key={m.id} value={m.id}>
-                          {m.name}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                  <div className="col-md-4">
-                    <select
-                      className="form-control"
-                      value={form.mother_id ?? ""}
-                      onChange={(e) =>
-                        setForm({
-                          ...form,
-                          mother_id: e.target.value ? Number(e.target.value) : null,
-                        })
-                      }
-                    >
-                      <option value="">Pilih Ibu</option>
-                      {members.map((m) => (
-                        <option key={m.id} value={m.id}>
-                          {m.name}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                  <div className="col-md-4">
-                    <select
-                      className="form-control"
-                      value={form.spouse_id ?? ""}
-                      onChange={(e) =>
-                        setForm({
-                          ...form,
-                          spouse_id: e.target.value ? Number(e.target.value) : null,
-                        })
-                      }
-                    >
-                      <option value="">Pilih Pasangan</option>
-                      {members.map((m) => (
-                        <option key={m.id} value={m.id}>
-                          {m.name}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                  <div className="col-12">
-                    <textarea
-                      placeholder="Catatan"
-                      className="form-control"
-                      value={form.notes}
-                      onChange={(e) => setForm({ ...form, notes: e.target.value })}
-                    />
-                  </div>
-                </div>
+        <div className="mt-3">{showTree && <PedigreeTree animals={animals}  />}</div>
 
-                <div className="mt-3 text-end">
-                  <button type="submit" className="btn btn-primary">
-                    {editingId ? "Perbarui Anggota" : "Simpan Anggota"}
-                  </button>
-                  {editingId && (
-                    <button
-                      type="button"
-                      className="btn btn-secondary ms-2"
-                      onClick={resetForm}
-                    >
-                      Batal
-                    </button>
+        <div className="card mt-3">
+          <div className="card-body">
+            <h6>Daftar Hewan</h6>
+
+            <div className="table-responsive">
+              <table className="table table-striped table-hover">
+                <thead className="table-primary">
+                  <tr>
+                    <th>ID</th>
+                    <th>Code</th>
+                    <th>Nama</th>
+                    <th>Breed</th>
+                    <th>Gender</th>
+                    <th>Birth</th>
+                    <th>Sire</th>
+                    <th>Dam</th>
+                    <th>Breeder</th>
+                    <th>Notes</th>
+                    <th>Aksi</th>
+                  </tr>
+                </thead>
+
+                <tbody>
+                  {loading ? (
+                    <tr>
+                      <td colSpan={11} className="text-center">
+                        Memuat...
+                      </td>
+                    </tr>
+                  ) : animals.length === 0 ? (
+                    <tr>
+                      <td colSpan={11} className="text-center text-muted">
+                        Belum ada data
+                      </td>
+                    </tr>
+                  ) : (
+                    animals.map((a) => (
+                      <tr key={a.id}>
+                        <td>{a.id}</td>
+                        <td>{a.unique_code || "-"}</td>
+                        <td>{a.cat_name}</td>
+                        <td>{a.breed || "-"}</td>
+                        <td>{a.gender}</td>
+                        <td>{a.birth_date || "-"}</td>
+                        <td>{getNameById(a.sire_id)}</td>
+                        <td>{getNameById(a.dam_id)}</td>
+                        <td>{a.breeder || "-"}</td>
+                        <td style={{ maxWidth: 200 }}>{a.notes || "-"}</td>
+
+                        <td>
+                          <div className="d-flex gap-2 flex-wrap">
+                            <button
+                              className="btn btn-sm btn-warning"
+                              onClick={() => {
+                                setEditing(a);
+                                setShowForm(true);
+                                window.scrollTo({ top: 0, behavior: "smooth" });
+                              }}
+                            >
+                              Edit
+                            </button>
+
+                            <button
+                              className="btn btn-sm btn-danger"
+                              onClick={() => handleDelete(a.id)}
+                            >
+                              Hapus
+                            </button>
+
+                            <ScanPedigreeButton
+                              cat={a}
+                              cloudName={CLOUDINARY_CLOUD_NAME}
+                              uploadPreset={CLOUDINARY_UPLOAD_PRESET}
+                            />
+                          </div>
+                        </td>
+                      </tr>
+                    ))
                   )}
-                </div>
-              </form>
+                </tbody>
+              </table>
             </div>
           </div>
-        )}
+        </div>
 
-        {treeVisible && (
-          <div className="card mb-4">
-            <div className="card-body">
-              <h5 className="card-title text-center text-success mb-3">
-                Pedigree Keluarga (Generasi)
-              </h5>
-              {members.length === 0 ? (
-                <p className="text-center text-muted">Belum ada anggota.</p>
-              ) : (
-                renderTreeByGeneration(buildTreeByGeneration())
-              )}
-            </div>
-          </div>
-        )}
-
-
-        <div className="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-3">
-          {members.length === 0 && (
-            <p className="text-center text-muted">
-              Belum ada anggota keluarga yang ditambahkan.
-            </p>
-          )}
-          {members.map((m) => (
-            <div key={m.id} className="col">
-              <div className="card h-100 text-center">
-                <div className="card-body">
-                  <img
-                    src={userpict}
-                    alt="Profile"
-                    className="rounded-circle mb-2"
-                    style={{ width: "80px", height: "80px", objectFit: "cover" }}
-                  />
-                  <h6 className="card-title text-primary">{m.name}</h6>
-                  <p className="card-text text-muted mb-1">
-                    {m.dob ? new Date(m.dob).toLocaleDateString() : "Tanggal tidak tersedia"}
-                  </p>
-                  <p className="card-text mb-1">
-                    Gender: <strong>{m.gender === "male" ? "Laki-laki" : "Perempuan"}</strong>
-                  </p>
-                  <p className="card-text mb-1">Ayah: {getNameById(m.father_id)}</p>
-                  <p className="card-text mb-1">Ibu: {getNameById(m.mother_id)}</p>
-                  <p className="card-text mb-1">Pasangan: {getNameById(m.spouse_id)}</p>
-                  <p className="card-text fst-italic text-secondary">{m.notes}</p>
-                  <div className="mt-2">
-                    <button
-                      className="btn btn-sm btn-warning me-2"
-                      onClick={() => onEdit(m)}
-                    >
-                      Edit
-                    </button>
-                    <button
-                      className="btn btn-sm btn-danger"
-                      onClick={() => onDelete(m.id)}
-                    >
-                      Hapus
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          ))}
+        <div className="mt-3 text-end">
+          <button className="btn btn-outline-primary" onClick={load}>
+            Refresh
+          </button>
         </div>
       </main>
       <Footer />

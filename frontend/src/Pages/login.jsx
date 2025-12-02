@@ -17,8 +17,17 @@ export default function Login({ setUser }) {
       const res = await login(username, password);
       const userData = res.data;
 
+      // SIMPAN KE LOCAL STORAGE DI SINI !!
+      localStorage.setItem("userProfile", JSON.stringify({
+        id: userData.id,
+        username: userData.username,
+        role: userData.role
+      }));
+
+      // OPTIONAL: tetap simpan ke state global kalau kamu pakai
       setUser({ ...userData, loggedIn: true });
 
+      // redirect sesuai role
       if (userData.role === 'admin') {
         navigate('/dashboard');
       } else if (userData.role === 'user') {
@@ -38,6 +47,7 @@ export default function Login({ setUser }) {
       });
     }
   };
+
 
   return (
     <div style={{

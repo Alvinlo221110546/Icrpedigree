@@ -7,8 +7,11 @@ import Dashboard from './Pages/dashboard';
 import Home from './Pages/Home.jsx';
 import AboutUs from './Pages/aboutUs.jsx';
 import ContactUs from './Pages/contactUs.jsx';
-import Header from './Componen/Header.jsx';
+import Header from './Components/Header.jsx';
 import UserDashboard from './Pages/dashboarUser.jsx';
+import BreederCatList from './Pages/BreederCatList.jsx';
+import BreederProfileForm from './Components/BreederProfileForm.jsx';
+import Profile from './Pages/Profile.jsx';
 
 function Layout({ user, setUser }) {
   const location = useLocation();
@@ -28,6 +31,9 @@ function Layout({ user, setUser }) {
               <Route path="/dashboard-user" element={<UserDashboard />} />
               <Route path="/about" element={<AboutUs />} />
               <Route path="/contact" element={<ContactUs />} />
+              <Route path="/breeder/cats" element={<BreederCatList />} />
+              <Route path="/breeder/profile" element={<BreederProfileForm />} />
+              <Route path="/profile" element={<Profile />} />
             </>
           )}
           <Route

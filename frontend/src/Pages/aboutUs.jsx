@@ -25,14 +25,17 @@ export default function AboutUs() {
       </h1>
 
       <p style={{ marginBottom: '20px', textAlign: 'justify' }}>
-        <strong>ICR Pedigree</strong> adalah sistem informasi silsilah manusia yang dikembangkan
-        untuk membantu keluarga, peneliti, dan organisasi dalam mencatat, menelusuri, serta
-        memvisualisasikan hubungan kekerabatan antarindividu secara akurat dan modern.
+        <strong>ICR Pedigree</strong> adalah platform modern untuk pengelolaan silsilah hewan
+        (animal lineage) yang dirancang untuk memenuhi kebutuhan peternak, breeder, hingga
+        organisasi resmi yang mengelola data keturunan hewan seperti kucing, anjing, burung,
+        reptil, hingga hewan ternak.
       </p>
 
       <p style={{ marginBottom: '20px', textAlign: 'justify' }}>
-        Platform ini dirancang agar pengguna dapat dengan mudah membuat pohon keluarga digital,
-        menyimpan data generasi, serta menjaga warisan sejarah keluarga secara aman dan terorganisir.
+        Sistem ini dilengkapi fitur <strong>ICR (Intelligent Character Recognition)</strong> untuk
+        membaca dokumen pedigree fisik dan mengubahnya menjadi data digital, serta mekanisme
+        keamanan canggih menggunakan <strong>enkripsi, hashing berantai, dan riwayat immutable</strong>
+        agar data silsilah tidak mudah dipalsukan atau dimanipulasi.
       </p>
 
       <h2
@@ -45,10 +48,10 @@ export default function AboutUs() {
       >
         Visi Kami
       </h2>
+
       <p style={{ marginBottom: '20px', textAlign: 'justify' }}>
-        Menjadi platform silsilah digital terpercaya yang membantu masyarakat melestarikan sejarah
-        keluarga, mempererat hubungan antar generasi, dan mendukung penelitian genealogis di
-        Indonesia.
+        Menjadi platform silsilah hewan teraman dan paling akurat yang mendukung perkembangan
+        dunia breeding dengan teknologi modern yang dapat dipercaya.
       </p>
 
       <h2
@@ -61,16 +64,18 @@ export default function AboutUs() {
       >
         Misi Kami
       </h2>
+
       <ul style={{ marginLeft: '20px', marginBottom: '20px', listStyleType: 'disc' }}>
-        <li>Menyediakan sistem pencatatan silsilah keluarga yang intuitif dan mudah digunakan.</li>
-        <li>Memfasilitasi pelestarian data keluarga lintas generasi secara digital.</li>
-        <li>Mendukung penelitian dan pengembangan dalam bidang genealogis dan sejarah keluarga.</li>
+        <li>Menyediakan sistem pencatatan silsilah hewan yang aman dan terenkripsi.</li>
+        <li>Memudahkan breeder dalam mengelola data keturunan dan riwayat hewan.</li>
+        <li>Memastikan integritas pedigree dengan teknologi hash-chain dan audit.</li>
+        <li>Mendigitalisasi dokumen pedigree menggunakan teknologi ICR.</li>
       </ul>
 
       <p style={{ textAlign: 'justify' }}>
-        Melalui <strong>ICR Pedigree</strong>, kami percaya setiap keluarga memiliki kisah yang
-        berharga untuk dijaga dan dibagikan. Dengan teknologi, kami membantu menjembatani masa lalu,
-        masa kini, dan masa depan keluarga Anda.
+        Dengan <strong>ICR Pedigree</strong>, kami berkomitmen membantu komunitas breeder
+        menciptakan ekosistem yang transparan, aman, dan terpercaya dalam pengelolaan data
+        keturunan hewan, sehingga kualitas breeding dapat terus berkembang ke arah yang lebih baik.
       </p>
     </div>
   );

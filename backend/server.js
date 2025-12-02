@@ -8,44 +8,66 @@ import path from 'path';
 import morgan from 'morgan';
 dotenv.config();
 
+// AUTH
 import authRoutes from './Routes/authRoutes.js';
-import familyRoutes from './Routes/familyRoutes.js';
-import * as AuthController from './Controller/authController.js';
+import * as AuthController from './Models/authModel.js';
 import * as AuditModel from './Models/auditModel.js';
-import * as FamilyController from './Controller/familyController.js';
 
+// ICR PEDIGREE (animal only, NO SCAN)
+import animalRoutes from './Routes/catRoutes.js';
+import * as AnimalModel from './Models/catModel.js';
+import * as AnimalController from './Controller/catController.js';
+
+
+import pedigreeConnectRoute from "./Routes/pedigreeConnectRoute.js";
+import { initPedigreeConnectTables } from "./Models/catConnectModel.js";
 
 const app = express();
 
-// Security & basic middleware
+// Security
 app.use(helmet());
 app.use(cors({
-  origin: ['http://localhost:5173'], 
+  origin: ['http://localhost:5173'],
   credentials: true
 }));
 
 app.use(express.json({ limit: '10kb' }));
 app.use(cookieParser());
 
+// Logger setup
 if (!fs.existsSync('./logs')) {
   fs.mkdirSync('./logs');
 }
 
-const accessLogStream = fs.createWriteStream(path.join('./logs', 'access.log'), { flags: 'a' });
-
+const accessLogStream = fs.createWriteStream(
+  path.join('./logs', 'access.log'),
+  { flags: 'a' }
+);
 
 app.use(morgan('combined', { stream: accessLogStream }));
-
 if (process.env.NODE_ENV !== 'production') {
   app.use(morgan('dev'));
 }
 
-// Init DB tables
+// INIT DB TABLES
 await AuthController.createUsersTableIfNotExists();
 await AuditModel.createAuditTableIfNotExists();
-await FamilyController.init();
 
-// Seed admin user jika belum ada
+// Pastikan user_profiles ada dulu
+await initPedigreeConnectTables();
+
+// Sekarang buat tabel cats (FK user_id sudah aman)
+await AnimalModel.createCatsTableIfNotExists();
+await AnimalModel.createCatHistoryTableIfNotExists();
+await AnimalModel.createPedigreeScanTableIfNotExists();
+
+if (AnimalController.init) await AnimalController.init();
+
+
+
+await initPedigreeConnectTables();
+
+// Seed admin
 import { pool } from './Config/db.js';
 const [users] = await pool.query('SELECT COUNT(*) as cnt FROM users');
 if (users[0].cnt === 0) {
@@ -60,15 +82,19 @@ if (users[0].cnt === 0) {
 
 // Routes
 app.use('/api/auth', authRoutes);
-app.use('/api/family', familyRoutes);
+app.use("/api/pedigree", pedigreeConnectRoute);
 
-// Health check endpoint
+// Animal routes only — no scan
+app.use('/api/animal', animalRoutes);
+
+// Health check
 app.get('/health', (req, res) =>
   res.json({ status: 'ok', time: new Date().toISOString() })
 );
 
-// Server start
+
+// Start server
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () =>
-  console.log(`🚀 Backend listening on http://localhost:${PORT}`)
+  console.log(`🚀 Backend running @ http://localhost:${PORT}`)
 );

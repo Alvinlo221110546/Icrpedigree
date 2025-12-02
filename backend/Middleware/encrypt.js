@@ -1,33 +1,34 @@
+// src/Middleware/encrypt.js
 import crypto from 'crypto';
 import dotenv from 'dotenv';
 dotenv.config();
 
-const KEY_BASE64 = process.env.SECRET_KEY_BASE64;
-if (!KEY_BASE64) {
-  console.error("SECRET_KEY_BASE64 not set");
-  process.exit(1);
-}
-const KEY = Buffer.from(KEY_BASE64, 'base64'); // 32 bytes
+const KEY = process.env.ENCRYPTION_KEY || 'default_dev_key_change_me_please_123456';
+const KEY_BUF = crypto.createHash('sha256').update(KEY).digest(); // 32 bytes key
 
-export function encryptText(plain) {
-  if (plain === null || plain === undefined) return null;
-  const iv = crypto.randomBytes(16);
-  const cipher = crypto.createCipheriv('aes-256-cbc', KEY, iv);
-  let enc = cipher.update(String(plain), 'utf8', 'base64');
-  enc += cipher.final('base64');
-  return iv.toString('base64') + ':' + enc;
-}
+// encode result as iv:cipher:tag (base64)
+export const encryptText = (plaintext) => {
+  if (plaintext === null || plaintext === undefined) return null;
+  const iv = crypto.randomBytes(12); // 96-bit recommended for GCM
+  const cipher = crypto.createCipheriv('aes-256-gcm', KEY_BUF, iv);
+  const encrypted = Buffer.concat([cipher.update(String(plaintext), 'utf8'), cipher.final()]);
+  const tag = cipher.getAuthTag();
+  return `${iv.toString('base64')}:${encrypted.toString('base64')}:${tag.toString('base64')}`;
+};
 
-export function decryptText(stored) {
-  if (!stored) return null;
+export const decryptText = (payload) => {
+  if (!payload) return null;
   try {
-    const [ivb64, ciphertext] = stored.split(':');
-    const iv = Buffer.from(ivb64, 'base64');
-    const decipher = crypto.createDecipheriv('aes-256-cbc', KEY, iv);
-    let dec = decipher.update(ciphertext, 'base64', 'utf8');
-    dec += decipher.final('utf8');
-    return dec;
+    const [ivB, encryptedB, tagB] = payload.split(':');
+    const iv = Buffer.from(ivB, 'base64');
+    const encrypted = Buffer.from(encryptedB, 'base64');
+    const tag = Buffer.from(tagB, 'base64');
+    const decipher = crypto.createDecipheriv('aes-256-gcm', KEY_BUF, iv);
+    decipher.setAuthTag(tag);
+    const decrypted = Buffer.concat([decipher.update(encrypted), decipher.final()]);
+    return decrypted.toString('utf8');
   } catch (e) {
+    // kalau gagal decrypt, fallback null
     return null;
   }
-}
+};
