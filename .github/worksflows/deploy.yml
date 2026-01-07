@@ -2,7 +2,7 @@ name: CI/CD Pipeline
 
 on:
   push:
-    branches: [ main ]  
+    branches: [ main ]
 
 jobs:
   build-and-deploy:
@@ -37,5 +37,16 @@ jobs:
           push: true
           tags: alvinlo221110546/ipicr-frontend:latest
 
+      - name: Deploy to Kubernetes
+        uses: azure/k8s-deploy@v3
+        with:
+          manifests: |
+            ./k8s/backend-deployment.yaml
+            ./k8s/frontend-deployment.yaml
+          images: |
+            alvinlo221110546/ipicr-backend:latest
+            alvinlo221110546/ipicr-frontend:latest
+          namespace: default
+
       - name: Done
-        run: echo "✅ Build & Push Docker Images Berhasil!"
+        run: echo "✅ Build, Push, & Deploy Berhasil!"

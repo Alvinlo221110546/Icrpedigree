@@ -1,3 +1,4 @@
+// src/Components/PedigreeTree.jsx
 import React from "react";
 import Swal from "sweetalert2";
 import userDefault from "../assets/cat-default.png";
@@ -7,31 +8,22 @@ const DEFAULT_AVATAR = userDefault;
 const CLOUDINARY_UPLOAD_PRESET = "animal_upload";
 const CLOUDINARY_CLOUD_NAME = "dgl701jmj";
 
+// Warna per level generasi
+const LEVEL_COLORS = ["#ffffff", "#a0d8f1", "#ffd9a0", "#d4f1a0"];
+
 export default function PedigreeTree({ animals, onPhotoUpdated }) {
-  console.log("📌 ANIMALS DITERIMA:", animals);
-
   const handleUpload = async (catId) => {
-    console.log("➡️ Upload photo untuk Cat ID:", catId);
-
     const fileInput = document.createElement("input");
     fileInput.type = "file";
     fileInput.accept = "image/*";
 
     fileInput.onchange = async (e) => {
       const file = e.target.files[0];
-      console.log("📁 FILE DIPILIH:", file);
-
       if (!file) return;
 
-      // Upload ke Cloudinary
       const formData = new FormData();
       formData.append("file", file);
       formData.append("upload_preset", CLOUDINARY_UPLOAD_PRESET);
-
-      const uploadUrl =
-        `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`;
-
-      console.log("🚀 UPLOAD KE CLOUDINARY:", uploadUrl);
 
       Swal.fire({
         title: "Mengupload Foto...",
@@ -40,53 +32,34 @@ export default function PedigreeTree({ animals, onPhotoUpdated }) {
         didOpen: () => Swal.showLoading(),
       });
 
-      const res = await fetch(uploadUrl, {
-        method: "POST",
-        body: formData,
-      });
-
-      const data = await res.json();
-      console.log("☁️ CLOUDINARY RESPONSE:", data);
-
-      if (!data.secure_url) {
-        return Swal.fire({
-          icon: "error",
-          title: "Upload Gagal",
-          text: "Cloudinary gagal mengupload foto.",
-        });
-      }
-
-      console.log("📸 CLOUDINARY URL:", data.secure_url);
-
-      const payload = {
-        photo_url: data.secure_url,
-        photo_public_id: data.public_id,
-      };
-
-      console.log("📤 KIRIM KE BACKEND:", payload);
-
       try {
-        await updateAnimalPhoto(catId, payload);
+        const res = await fetch(
+          `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`,
+          { method: "POST", body: formData }
+        );
+        const data = await res.json();
+
+        if (!data.secure_url) throw new Error("Upload Cloudinary gagal");
+
+        await updateAnimalPhoto(catId, {
+          photo_url: data.secure_url,
+          photo_public_id: data.public_id,
+        });
 
         Swal.fire({
           icon: "success",
           title: "Foto Berhasil Ditambahkan!",
-          text: "Foto berhasil diupload dan disimpan.",
           timer: 1500,
           showConfirmButton: false,
         });
 
-        if (onPhotoUpdated) {
-          console.log("🔄 Trigger onPhotoUpdated()");
-          onPhotoUpdated();
-        }
-
+        if (onPhotoUpdated) onPhotoUpdated();
       } catch (err) {
-        console.error("❌ ERROR UPDATE BACKEND:", err);
+        console.error(err);
         Swal.fire({
           icon: "error",
-          title: "Gagal Menyimpan Foto",
-          text: "Backend menolak permintaan update foto.",
+          title: "Gagal Upload Foto",
+          text: err.message || "Terjadi kesalahan",
         });
       }
     };
@@ -94,7 +67,8 @@ export default function PedigreeTree({ animals, onPhotoUpdated }) {
     fileInput.click();
   };
 
-  const build = () => {
+  // Build tree dan tentukan level generasi
+  const buildTree = () => {
     const map = {};
     const roots = [];
 
@@ -112,14 +86,12 @@ export default function PedigreeTree({ animals, onPhotoUpdated }) {
       }
     });
 
-    console.log("🌳 HASIL BUILD TREE:", roots);
     return roots;
   };
 
-  const render = (nodes) => {
-    console.log("🎨 RENDER NODES:", nodes);
-
-    if (!nodes.length) return <p className="text-muted">Belum ada hewan.</p>;
+  const renderTree = (nodes) => {
+    if (!nodes || nodes.length === 0)
+      return <p className="text-muted">Belum ada hewan.</p>;
 
     const levels = {};
     const dfs = (node) => {
@@ -127,10 +99,7 @@ export default function PedigreeTree({ animals, onPhotoUpdated }) {
       levels[node.level].push(node);
       node.children.forEach(dfs);
     };
-
     nodes.forEach(dfs);
-
-    console.log("📚 LEVELS:", levels);
 
     return Object.keys(levels)
       .sort((a, b) => a - b)
@@ -138,36 +107,44 @@ export default function PedigreeTree({ animals, onPhotoUpdated }) {
         <div
           key={lvl}
           className="d-flex justify-content-center gap-3 mb-3 flex-wrap"
+          style={{ alignItems: "flex-start" }}
         >
           {levels[lvl].map((n) => {
-            console.log("🐱 NODE:", n.cat_name, "| FOTO:", n.profile_image_url);
-
+            const bgColor = LEVEL_COLORS[n.level % LEVEL_COLORS.length];
             return (
               <div
                 key={n.id}
                 className="card p-2 text-center"
-                style={{ minWidth: 160 }}
+                style={{
+                  minWidth: 160,
+                  backgroundColor: bgColor,
+                  borderRadius: 12,
+                  boxShadow: "0 2px 6px rgba(0,0,0,0.15)",
+                  transition: "all 0.2s",
+                }}
               >
                 <img
                   src={n.profile_image_url || DEFAULT_AVATAR}
                   alt={n.cat_name}
                   style={{
-                    width: 80,
-                    height: 80,
-                    borderRadius: 99,
+                    width: 100,
+                    height: 100,
+                    borderRadius: "50%",
                     objectFit: "cover",
+                    border: "2px solid #ccc",
+                    padding: 2,
+                    backgroundColor: "#fff",
                   }}
                   className="mx-auto"
                 />
 
                 <div className="mt-2">
                   <strong>{n.cat_name}</strong>
-                  <div className="text-muted">{n.breed || "-"}</div>
+                  <div className="text-muted fst-italic">{n.breed || "-"}</div>
                   <div className="small text-secondary">
                     {n.gender}{" "}
                     {n.birth_date
-                      ? "• " +
-                        new Date(n.birth_date).toLocaleDateString()
+                      ? "• " + new Date(n.birth_date).toLocaleDateString()
                       : ""}
                   </div>
                   {n.notes && (
@@ -196,7 +173,7 @@ export default function PedigreeTree({ animals, onPhotoUpdated }) {
   return (
     <div className="card mb-3 p-3">
       <h5 className="mb-3">Pedigree (Generasi)</h5>
-      {render(build())}
+      {renderTree(buildTree())}
     </div>
   );
 }

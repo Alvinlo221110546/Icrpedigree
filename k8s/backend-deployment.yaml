@@ -1,0 +1,46 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: backend-deployment
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: backend
+  template:
+    metadata:
+      labels:
+        app: backend
+    spec:
+      containers:
+        - name: backend
+          image: backend:latest
+          imagePullPolicy: Never
+          ports:
+            - containerPort: 5000
+
+          env:
+            - name: PORT
+              value: "5000"
+            - name: NODE_ENV
+              value: "production"
+            - name: DB_HOST
+              value: mysql-service
+            - name: DB_PORT
+              value: "3306"
+            - name: DB_USER
+              value: icr_user
+            - name: DB_PASS
+              value: icr_pass
+            - name: DB_NAME
+              value: icr_db
+            - name: JWT_SECRET
+              value: a769b29e1b3ac641bb58b0379adeb19feedd5d2248a8a1fba4e787cc4143ac8c
+
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "128Mi"
+            limits:
+              cpu: "500m"
+              memory: "256Mi"

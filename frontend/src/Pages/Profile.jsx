@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { getMyProfile } from "../Utils/api";
+import Footer from "../Components/Footer.jsx";
 
 // Fungsi untuk membuat huruf pertama setiap kata menjadi kapital
 const capitalizeWords = (str) => {
@@ -105,6 +106,7 @@ export default function Profile() {
           Edit Profil
         </button>
       </div>
+      <Footer />
     </div>
   );
 }

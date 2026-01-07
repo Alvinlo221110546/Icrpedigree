@@ -1,6 +1,8 @@
+// src/Components/AnimalForm.jsx
 import React, { useEffect, useState } from "react";
 import Swal from "sweetalert2";
 import withReactContent from "sweetalert2-react-content";
+import { getAnimals } from "../Utils/api.js"; // pakai api.js
 
 const MySwal = withReactContent(Swal);
 
@@ -14,7 +16,7 @@ export default function AnimalForm({ initial, onSubmit, onCancel }) {
     breed: "",
     gender: "male",
     birth_date: "",
-    breeder: "",      // username
+    breeder: "",
     notes: "",
     sire_id: null,
     dam_id: null,
@@ -22,8 +24,10 @@ export default function AnimalForm({ initial, onSubmit, onCancel }) {
     imageUrl: "",
     imagePreview: "",
     uploading: false,
-    user_id: null,    // FK
+    user_id: null,
   });
+
+  const [allCats, setAllCats] = useState([]);
 
   // Ambil user dari localStorage
   useEffect(() => {
@@ -38,6 +42,22 @@ export default function AnimalForm({ initial, onSubmit, onCancel }) {
     }
   }, []);
 
+  // Load semua kucing untuk dropdown
+  useEffect(() => {
+    const fetchCats = async () => {
+      try {
+        const res = await getAnimals(); // res = { data: [...] }
+        setAllCats(res.data);           // <--- ambil array di dalam `data`
+      } catch (err) {
+        console.error("Gagal mengambil kucing:", err);
+        MySwal.fire({ icon: "error", title: "Gagal load daftar kucing" });
+      }
+    };
+    fetchCats();
+  }, []);
+
+
+
   // Load data edit
   useEffect(() => {
     if (initial) {
@@ -50,8 +70,8 @@ export default function AnimalForm({ initial, onSubmit, onCancel }) {
         birth_date: initial.birth_date ?? "",
         breeder: initial.breeder ?? prev.breeder,
         notes: initial.notes ?? "",
-        sire_id: initial.sire_id ?? null,
-        dam_id: initial.dam_id ?? null,
+        sire_id: initial.sire_id?.toString() ?? null,
+        dam_id: initial.dam_id?.toString() ?? null,
         pedigree_number: initial.pedigree_number ?? "",
         imageUrl: initial.scan_image ?? "",
         imagePreview: initial.scan_image ?? "",
@@ -103,7 +123,7 @@ export default function AnimalForm({ initial, onSubmit, onCancel }) {
       sire_id: form.sire_id ? Number(form.sire_id) : null,
       dam_id: form.dam_id ? Number(form.dam_id) : null,
       breeder: form.breeder || null,
-      user_id: form.user_id,       // FK
+      user_id: form.user_id,
       pedigree_number: form.pedigree_number || null,
       notes: form.notes || null,
       scan_image: form.imageUrl || null,
@@ -175,23 +195,47 @@ export default function AnimalForm({ initial, onSubmit, onCancel }) {
           />
         </div>
 
+        {/* Sire Dropdown */}
         <div className="col-md-6">
-          <input
+          <select
             className="form-control"
-            placeholder="Sire ID"
             value={form.sire_id ?? ""}
             onChange={(e) => update("sire_id", e.target.value || null)}
-          />
+          >
+            <option value="">-- Pilih Ayah (Sire) --</option>
+            {Array.isArray(allCats) &&
+              allCats
+                .filter(c => c.gender?.toLowerCase() === "male")
+                .filter(c => !initial || c.id !== initial.id) // <--- hilangkan kucing yg sedang diedit
+                .map(c => (
+                  <option key={c.id} value={c.id.toString()}>
+                    {c.cat_name} 
+                  </option>
+                ))}
+          </select>
         </div>
 
+        {/* Dam Dropdown */}
         <div className="col-md-6">
-          <input
+          <select
             className="form-control"
-            placeholder="Dam ID"
             value={form.dam_id ?? ""}
             onChange={(e) => update("dam_id", e.target.value || null)}
-          />
+          >
+            <option value="">-- Pilih Ibu (Dam) --</option>
+            {Array.isArray(allCats) &&
+              allCats
+                .filter(c => c.gender?.toLowerCase() === "female")
+                .filter(c => !initial || c.id !== initial.id) // <--- hilangkan kucing yg sedang diedit
+                .map(c => (
+                  <option key={c.id} value={c.id.toString()}>
+                    {c.cat_name} 
+                  </option>
+                ))}
+          </select>
         </div>
+
+
 
         <div className="col-md-6">
           <input
@@ -214,7 +258,7 @@ export default function AnimalForm({ initial, onSubmit, onCancel }) {
 
         {/* Upload Cloudinary */}
         <div className="col-12 mt-2">
-          <label className="form-label">Pedigree Certificate</label>
+          <label className="form-label">Birth Certificate</label>
           <input
             type="file"
             className="form-control"

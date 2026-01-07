@@ -1,4 +1,5 @@
 import React from 'react';
+import Footer from "../Components/Footer.jsx";
 
 export default function AboutUs() {
   return (
@@ -77,6 +78,8 @@ export default function AboutUs() {
         menciptakan ekosistem yang transparan, aman, dan terpercaya dalam pengelolaan data
         keturunan hewan, sehingga kualitas breeding dapat terus berkembang ke arah yang lebih baik.
       </p>
+      <Footer />
     </div>
+    
   );
 }

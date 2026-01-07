@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import Swal from "sweetalert2";
 import userDefault from "../assets/cat-default.png";
 import { getAnimals, getMyProfile } from "../Utils/api";
+import Footer from "../Components/Footer.jsx";
 
 export default function BreederCatList() {
   const [cats, setCats] = useState([]);
@@ -104,6 +105,7 @@ export default function BreederCatList() {
           ))}
         </div>
       )}
+      <Footer />
     </div>
   );
 }
