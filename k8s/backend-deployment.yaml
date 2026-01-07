@@ -18,7 +18,6 @@ spec:
           imagePullPolicy: Never
           ports:
             - containerPort: 5000
-
           env:
             - name: PORT
               value: "5000"
@@ -29,14 +28,22 @@ spec:
             - name: DB_PORT
               value: "3306"
             - name: DB_USER
-              value: icr_user
+              valueFrom:
+                secretKeyRef:
+                  name: backend-secrets
+                  key: DB_USER
             - name: DB_PASS
-              value: icr_pass
+              valueFrom:
+                secretKeyRef:
+                  name: backend-secrets
+                  key: DB_PASS
             - name: DB_NAME
               value: icr_db
             - name: JWT_SECRET
-              value: a769b29e1b3ac641bb58b0379adeb19feedd5d2248a8a1fba4e787cc4143ac8c
-
+              valueFrom:
+                secretKeyRef:
+                  name: backend-secrets
+                  key: JWT_SECRET
           resources:
             requests:
               cpu: "100m"
