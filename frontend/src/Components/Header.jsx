@@ -31,7 +31,7 @@ export default function Header({ role }) {
           marginLeft: '40px',
         }}
       >
-        ICR Pedigree
+        ICR Cat Pedigree
       </h1>
 
       {/* Navigasi hanya untuk user */}

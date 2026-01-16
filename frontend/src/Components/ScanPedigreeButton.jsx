@@ -2,7 +2,7 @@
 import React from "react";
 import Swal from "sweetalert2";
 import withReactContent from "sweetalert2-react-content";
-import { createPedigreeScan } from "../Utils/api.js";
+import { createPedigreeScan } from "../Utils/api";
 
 const MySwal = withReactContent(Swal);
 
@@ -78,7 +78,7 @@ export default function ScanPedigreeButton({ cat, cloudName, uploadPreset }) {
 
   return (
     <button className="btn btn-sm btn-info" onClick={handleScanPedigree}>
-      Scan Pedigree
+      Scan Pedigree Certificate
     </button>
   );
 }

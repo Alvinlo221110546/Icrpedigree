@@ -18,7 +18,6 @@ spec:
           imagePullPolicy: Never
           ports:
             - containerPort: 5000
-
           env:
             - name: PORT
               value: "5000"
@@ -36,7 +35,6 @@ spec:
               value: icr_db
             - name: JWT_SECRET
               value: a769b29e1b3ac641bb58b0379adeb19feedd5d2248a8a1fba4e787cc4143ac8c
-
           resources:
             requests:
               cpu: "100m"

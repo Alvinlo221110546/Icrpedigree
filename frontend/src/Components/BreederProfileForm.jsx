@@ -2,11 +2,12 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
 import withReactContent from "sweetalert2-react-content";
+import Footer from "../Components/Footer.jsx";
 
-import { 
-  getMyProfile, 
-  createMyProfile, 
-  updateMyProfile 
+import {
+  getMyProfile,
+  createMyProfile,
+  updateMyProfile
 } from "../Utils/api";
 
 const MySwal = withReactContent(Swal);
@@ -204,7 +205,7 @@ export default function BreederProfileForm() {
         )}
       </div>
 
-      <form onSubmit={handleSubmit}>
+      <form onSubmit={handleSubmit} className="mb-5">
         <div className="mb-3">
           <label className="form-label">Nama Lengkap</label>
           <input
@@ -264,6 +265,9 @@ export default function BreederProfileForm() {
           {loading ? "Menyimpan..." : profileExists ? "Update Profil" : "Buat Profil"}
         </button>
       </form>
+      <div className="mt-5">
+        <Footer />
+      </div>
     </div>
   );
 }

@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import Footer from "../Components/Footer.jsx";
 
 export default function ContactUs() {
   const [form, setForm] = useState({ name: '', email: '', message: '' });
@@ -129,6 +130,9 @@ export default function ContactUs() {
           {loading ? 'Mengirim...' : 'Kirim ke WhatsApp'}
         </button>
       </form>
+      <div>
+        <Footer />
+      </div>
     </div>
   );
 }
