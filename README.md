@@ -68,25 +68,27 @@ cp frontend/.env.example frontend/.env
 cp backend/.env.example backend/.env
 ```
 
-🔹 **Frontend** (`/frontend/.env`)
-```
-VITE_API_URL=<URL_BACKEND_RAILWAY_ANDA>
-# Ganti dengan URL backend yang diberikan Railway,
-# misalnya: https://icrpedigreebe-production.up.railway.app
+---
+
+#### �️ **Local Development (Docker Compose)**
+
+�🔹 **Frontend** (`/frontend/.env`)
+```env
+VITE_API_URL=http://localhost:5000
 ```
 
 🔹 **Backend** (`/backend/.env`)
-```
+```env
 # Server Configuration
 PORT=5000
-NODE_ENV=production
+NODE_ENV=development
 
-# Database Configuration - GANTI SESUAI DATA RAILWAY
-DB_HOST=mysql.railway.internal
+# Database Configuration - Local Docker
+DB_HOST=mysql
 DB_PORT=3306
 DB_USER=root
-DB_PASS=your_database_password_here
-DB_NAME=railway
+DB_PASS=root123
+DB_NAME=catline_db
 
 # JWT Configuration
 JWT_SECRET=your_jwt_secret_here
@@ -94,7 +96,39 @@ SECRET_KEY_BASE64=your_secret_key_base64_here
 # Gunakan perintah ini untuk generate key baru:
 # node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"
 
-# Cookie & CORS
+# Cookie & CORS - Local
+COOKIE_NAME=icr_token
+CORS_ORIGIN=http://localhost:5173
+```
+
+---
+
+#### ☁️ **Production (Railway)**
+
+🔹 **Frontend** (`/frontend/.env`)
+```env
+VITE_API_URL=https://icrpedigreebe-production.up.railway.app
+# Ganti dengan URL backend Railway Anda
+```
+
+🔹 **Backend** (`/backend/.env`)
+```env
+# Server Configuration
+PORT=5000
+NODE_ENV=production
+
+# Database Configuration - Railway
+DB_HOST=mysql.railway.internal
+DB_PORT=3306
+DB_USER=root
+DB_PASS=your_railway_database_password_here
+DB_NAME=railway
+
+# JWT Configuration
+JWT_SECRET=your_production_jwt_secret_here
+SECRET_KEY_BASE64=your_production_secret_key_base64_here
+
+# Cookie & CORS - Production
 COOKIE_NAME=icr_token
 CORS_ORIGIN=https://ipicr.vercel.app
 ```
@@ -193,13 +227,17 @@ Mengotomatisasi deployment ke Kubernetes dengan pendekatan GitOps.
 ## 🔗 Link Penting
 
 - **GitHub:** [https://github.com/Alvinlo221110546/CatLine.git](https://github.com/Alvinlo221110546/CatLine.git)
-- **Aplikasi Live:** [https://ipicr.vercel.app/](https://ipicr.vercel.app/)
 
 ### Video Implementasi
 
-📹 **Video Penjelasan Implementasi Kubernetes:** `Video Penjelasan Implementasi Kubernetes.mp4`
+📹 **Video Dokumentasi Lengkap:**  
+[Klik di sini untuk melihat video](https://mikroskilacid-my.sharepoint.com/:f:/g/personal/221110546_students_mikroskil_ac_id/IgDx7OtMc5Q5T5Q5bG72J8GnAd1hBB_ZH9gI4a142W9Vj5k?e=ODm433)
 
-📹 **Video Implementasi HPA, CI/CD, dan Monitoring Tool:** `Kelompok 10_UAS_IF-A Sore`
+Video mencakup:
+- **Implementasi Kubernetes** - Setup cluster, deployment, dan services
+- **HPA (Horizontal Pod Autoscaler)** - Auto-scaling berdasarkan load
+- **CI/CD Pipeline** - GitHub Actions untuk automated deployment
+- **Monitoring Tool** - Prometheus & Grafana untuk pemantauan real-time
 
 ---
 
